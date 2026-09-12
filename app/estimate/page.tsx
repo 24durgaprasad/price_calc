@@ -19,7 +19,7 @@ function Page() {
   const q = useSearchParams();
   const id = q.get("id");
   const [bhk, setBhk] = useState(q.get("bhk") ?? "3 BHK");
-  const [city, setCity] = useState(q.get("city") ?? "bengaluru");
+  const [city, setCity] = useState(q.get("city") ?? "vizag");
   const [purpose, setPurpose] = useState(q.get("purpose") ?? "Move In");
   const [extras, setExtras] = useState<Extra[]>(() => loadExtras(dec(q.get("extras"))));
   const [share, setShare] = useState("");
@@ -41,7 +41,7 @@ function Page() {
     <main className="wrap-wide">
       <p className="eyebrow">Your estimate · 3 lifestyle options</p>
       <h1>What your home could cost</h1>
-      <p className="sub">{extras.length} item{extras.length === 1 ? "" : "s"} · {bhk} · {city} · <Link className="link" href="/quotes/estimate-flow">Modify →</Link></p>
+      <p className="sub">{extras.length} item{extras.length === 1 ? "" : "s"} · {bhk} · 📍 Visakhapatnam (Vizag) · <Link className="link" href="/quotes/estimate-flow">Modify →</Link></p>
       <div className="card">
         <ExtrasEditor value={extras} onChange={setExtras} />
         <div className="share"><button className="btn-ghost" onClick={save} disabled={!extras.length}>Save & share</button>{share && <input readOnly value={share} onFocus={(e) => e.target.select()} />}</div>

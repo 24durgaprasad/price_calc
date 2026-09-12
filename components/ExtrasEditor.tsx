@@ -46,10 +46,10 @@ export default function ExtrasEditor({ value, onChange }: { value: Extra[]; onCh
           <button className="x" onClick={() => onChange(value.filter((_, j) => j !== i))} aria-label={`Remove ${e.label}`}>✕</button>
         </div>
       ))}
-      <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-        <input list="catalog" placeholder="Item (e.g. Crockery unit)" value={label} onChange={(e) => { setLabel(e.target.value); pick(e.target.value); }} style={{ flex: 2 }} />
+      <div className="add-row">
+        <input name="label" list="catalog" placeholder="Item (e.g. Crockery unit)" value={label} onChange={(e) => { setLabel(e.target.value); pick(e.target.value); }} />
         <datalist id="catalog">{catalog.map((c) => <option key={c.label} value={c.label} />)}</datalist>
-        <input placeholder="₹ price" inputMode="numeric" value={price} onChange={(e) => setPrice(e.target.value.replace(/\D/g, "").slice(0, 9))} style={{ flex: 1 }} />
+        <input name="price" placeholder="₹ price" inputMode="numeric" value={price} onChange={(e) => setPrice(e.target.value.replace(/\D/g, "").slice(0, 9))} />
         <span className="stepper">× <button onClick={() => setQty(Math.max(1, qty - 1))}>−</button>{qty}<button onClick={() => setQty(qty + 1)}>+</button></span>
         <button className="btn" onClick={add} disabled={!label.trim() || !(Number(price) > 0)}>Add</button>
       </div>

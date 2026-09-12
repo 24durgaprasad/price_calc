@@ -2,7 +2,6 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import ExtrasEditor, { loadExtras } from "../../../components/ExtrasEditor";
-import cities from "../../../lib/cities.json";
 import type { Extra } from "../../../lib/pricing";
 
 const BHK = ["1 BHK", "2 BHK", "3 BHK", "3+ BHK"];
@@ -14,7 +13,7 @@ export default function Flow() {
   const [step, setStep] = useState(1);
   const [bhk, setBhk] = useState("3 BHK");
   const [purpose, setPurpose] = useState("Move In");
-  const [city, setCity] = useState("bengaluru");
+  const [city] = useState("vizag");
   const [extras, setExtras] = useState<Extra[]>(() => (typeof window === "undefined" ? [] : loadExtras()));
 
   const go = () => {
@@ -38,9 +37,7 @@ export default function Flow() {
       )}
       {step === 2 && (
         <div className="card">
-          <select value={city} onChange={(e) => setCity(e.target.value)} style={{ marginBottom: 16, width: "100%" }}>
-            {cities.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
+          <p className="loc">📍 Visakhapatnam (Vizag)</p>
           <ExtrasEditor value={extras} onChange={setExtras} />
           <p style={{ marginTop: 16 }}><button className="btn-ghost" onClick={() => setStep(1)}>← Back</button>{" "}
           <button className="btn" onClick={go} disabled={extras.length === 0}>See My Estimate →</button></p>
