@@ -2,14 +2,16 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";
-import ExtrasEditor from "../../components/ExtrasEditor";
+import ExtrasEditor, { loadExtras } from "../../components/ExtrasEditor";
 import { cfg, estimate, inr, type Extra, type Tier } from "../../lib/pricing";
 
 const dec = (s: string | null): Extra[] => {
   if (!s) return [];
   try {
     const arr = JSON.parse(decodeURIComponent(atob(s))) as Extra[];
-    return Array.isArray(arr) ? arr.filter((e) => e?.label && Number(e.price) > 0).slice(0, 10) : [];
+    return Array.isArray(arr)
+      ? arr.map((e) => ({ label: String(e?.label ?? ""), price: Math.round(Number(e?.price) || 0), qty: Math.max(1, Math.round(Number(e?.qty) || 1)) })).filter((e) => e.label && e.price > 0).slice(0, 20)
+      : [];
   } catch { return []; }
 };
 
@@ -17,11 +19,8 @@ function Page() {
   const q = useSearchParams();
   const bhk = q.get("bhk") ?? "3 BHK";
   const city = q.get("city") ?? "bengaluru";
-  const kitchen = q.get("kitchen") !== "false";
-  const other = Number(q.get("other") ?? 1);
-  const wardrobes = Number(q.get("wardrobes") ?? 2);
-  const [extras, setExtras] = useState<Extra[]>(() => dec(q.get("extras")));
-  const res = useMemo(() => estimate({ bhk, city, extras, kitchen, other, wardrobes }), [bhk, city, extras, kitchen, other, wardrobes]);
+  const [extras, setExtras] = useState<Extra[]>(() => loadExtras(dec(q.get("extras"))));
+  const res = useMemo(() => estimate({ bhk, city, extras, kitchen: false, other: 0, wardrobes: 0 }), [bhk, city, extras]);
   const [open, setOpen] = useState<Tier | null>(null);
 
   return (
@@ -29,10 +28,10 @@ function Page() {
       <h1>Your Estimate for 3 Lifestyle Options</h1>
       <p>Get 3D designs, personalized estimates &amp; avail exciting discounts</p>
       <p>
-        Wardrobes ({wardrobes} Units) · Other Interiors ({other} Unit{other === 1 ? "" : "s"}) · {bhk} · {city}{" "}
+        {extras.length} item{extras.length === 1 ? "" : "s"} · {bhk} · {city}{" "}
         <Link href="/quotes/estimate-flow">EDIT / Modify Requirements</Link>
       </p>
-      <h3>Your added items</h3>
+      <h3>Your items</h3>
       <ExtrasEditor value={extras} onChange={setExtras} />
       <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", marginTop: 16 }}>
         {(Object.keys(cfg.tiers) as Tier[]).map((t) => {
@@ -45,14 +44,10 @@ function Page() {
                 <h2>{d.label} {d.badge && <span style={{ background: "#e71c24", borderRadius: 4, color: "#fff", fontSize: 12, padding: "2px 6px" }}>{d.badge}</span>}</h2>
                 <p>{d.sub}</p>
                 <p style={{ fontSize: 28, fontWeight: 700 }}>{inr(v.total)}</p>
-                <p>Kitchen {inr(v.kitchen)} · Wardrobes {inr(v.wardrobes)} · Other {inr(v.other)}{v.extras > 0 && <> · Extras {inr(v.extras)}</>}</p>
                 <button onClick={() => setOpen(open === t ? null : t)}>View details</button>
                 {open === t && (
                   <ul>
-                    <li>Kitchen: {inr(v.kitchen)}</li>
-                    <li>Wardrobes ({wardrobes}): {inr(v.wardrobes)}</li>
-                    <li>Other ({other}): {inr(v.other)}</li>
-                    {extras.map((e, i) => <li key={i}>{e.label}: {inr(e.price)}</li>)}
+                    {extras.map((e, i) => <li key={i}>{e.label}: {inr(e.price)} × {e.qty} = {inr(e.price * e.qty)}</li>)}
                   </ul>
                 )}
               </div>
