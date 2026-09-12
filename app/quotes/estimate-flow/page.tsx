@@ -7,7 +7,6 @@ import type { Extra } from "../../../lib/pricing";
 
 const BHK = ["1 BHK", "2 BHK", "3 BHK", "3+ BHK"];
 const PURPOSE = ["Move In", "Rent Out", "Renovate"];
-const btn = (on: boolean): React.CSSProperties => ({ border: on ? "2px solid #e71c24" : "1px solid #ccc", borderRadius: 8, cursor: "pointer", padding: "12px 18px" });
 const enc = (e: Extra[]) => btoa(encodeURIComponent(JSON.stringify(e)));
 
 export default function Flow() {
@@ -25,27 +24,27 @@ export default function Flow() {
   };
 
   return (
-    <main style={{ margin: "0 auto", maxWidth: 640, padding: 24 }}>
-      <p>Get your free estimate in under 30 seconds! STEP {step} OF 2</p>
+    <main className="wrap">
+      <p className="eyebrow">Free estimate · Step {step} of 2</p>
+      <h1>{step === 1 ? "Tell us about your home" : "Add your items"}</h1>
       {step === 1 && (
-        <>
-          <h2>Your floorplan</h2>
-          <div style={{ display: "flex", gap: 8 }}>{BHK.map((b) => <button key={b} style={btn(b === bhk)} onClick={() => setBhk(b)}>{b}</button>)}</div>
-          <h2>Purpose</h2>
-          <div style={{ display: "flex", gap: 8 }}>{PURPOSE.map((p) => <button key={p} style={btn(p === purpose)} onClick={() => setPurpose(p)}>{p}</button>)}</div>
-          <br /><button onClick={() => setStep(2)} style={{ background: "#e71c24", border: 0, borderRadius: 8, color: "#fff", padding: "12px 24px" }}>Continue</button>
-        </>
+        <div className="card">
+          <p className="sub">Your floorplan</p>
+          <div className="chips">{BHK.map((b) => <button key={b} className={`chip${b === bhk ? " on" : ""}`} onClick={() => setBhk(b)}>{b}</button>)}</div>
+          <p className="sub">Purpose</p>
+          <div className="chips">{PURPOSE.map((p) => <button key={p} className={`chip${p === purpose ? " on" : ""}`} onClick={() => setPurpose(p)}>{p}</button>)}</div>
+          <br /><button className="btn" onClick={() => setStep(2)}>Continue →</button>
+        </div>
       )}
       {step === 2 && (
-        <>
-          <h2>Add your items</h2>
-          <select value={city} onChange={(e) => setCity(e.target.value)} style={{ display: "block", marginBottom: 8, padding: 10, width: "100%" }}>
+        <div className="card">
+          <select value={city} onChange={(e) => setCity(e.target.value)} style={{ marginBottom: 16, width: "100%" }}>
             {cities.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
           <ExtrasEditor value={extras} onChange={setExtras} />
-          <p><button onClick={() => setStep(1)}>Back</button>{" "}
-          <button onClick={go} disabled={extras.length === 0} style={{ background: "#e71c24", border: 0, borderRadius: 8, color: "#fff", padding: "12px 24px" }}>See My Estimate</button></p>
-        </>
+          <p style={{ marginTop: 16 }}><button className="btn-ghost" onClick={() => setStep(1)}>← Back</button>{" "}
+          <button className="btn" onClick={go} disabled={extras.length === 0}>See My Estimate →</button></p>
+        </div>
       )}
     </main>
   );

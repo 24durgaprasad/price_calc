@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import ExtrasEditor, { loadExtras } from "../../components/ExtrasEditor";
 import { cfg, estimate, inr, type Extra, type Tier } from "../../lib/pricing";
 
@@ -17,34 +17,47 @@ const dec = (s: string | null): Extra[] => {
 
 function Page() {
   const q = useSearchParams();
-  const bhk = q.get("bhk") ?? "3 BHK";
-  const city = q.get("city") ?? "bengaluru";
+  const id = q.get("id");
+  const [bhk, setBhk] = useState(q.get("bhk") ?? "3 BHK");
+  const [city, setCity] = useState(q.get("city") ?? "bengaluru");
+  const [purpose, setPurpose] = useState(q.get("purpose") ?? "Move In");
   const [extras, setExtras] = useState<Extra[]>(() => loadExtras(dec(q.get("extras"))));
+  const [share, setShare] = useState("");
+  useEffect(() => {
+    if (!id) return;
+    fetch(`/api/estimates?id=${id}`).then((r) => r.json()).then((d) => {
+      if (d.items) { setExtras(d.items); setBhk(d.bhk ?? bhk); setCity(d.city ?? city); setPurpose(d.purpose ?? purpose); }
+    }).catch(() => {});
+  }, [id]);
   const res = useMemo(() => estimate({ bhk, city, extras, kitchen: false, other: 0, wardrobes: 0 }), [bhk, city, extras]);
   const [open, setOpen] = useState<Tier | null>(null);
+  const save = async () => {
+    const r = await fetch("/api/estimates", { body: JSON.stringify({ bhk, city, items: extras, purpose }), headers: { "Content-Type": "application/json" }, method: "POST" });
+    const d = await r.json();
+    if (d.id) setShare(`${location.origin}/estimate?id=${d.id}`);
+  };
 
   return (
-    <main style={{ margin: "0 auto", maxWidth: 1100, padding: 24 }}>
-      <h1>Your Estimate for 3 Lifestyle Options</h1>
-      <p>Get 3D designs, personalized estimates &amp; avail exciting discounts</p>
-      <p>
-        {extras.length} item{extras.length === 1 ? "" : "s"} · {bhk} · {city}{" "}
-        <Link href="/quotes/estimate-flow">EDIT / Modify Requirements</Link>
-      </p>
-      <h3>Your items</h3>
-      <ExtrasEditor value={extras} onChange={setExtras} />
-      <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", marginTop: 16 }}>
+    <main className="wrap-wide">
+      <p className="eyebrow">Your estimate · 3 lifestyle options</p>
+      <h1>What your home could cost</h1>
+      <p className="sub">{extras.length} item{extras.length === 1 ? "" : "s"} · {bhk} · {city} · <Link className="link" href="/quotes/estimate-flow">Modify →</Link></p>
+      <div className="card">
+        <ExtrasEditor value={extras} onChange={setExtras} />
+        <div className="share"><button className="btn-ghost" onClick={save} disabled={!extras.length}>Save & share</button>{share && <input readOnly value={share} onFocus={(e) => e.target.select()} />}</div>
+      </div>
+      <div className="tiers">
         {(Object.keys(cfg.tiers) as Tier[]).map((t) => {
           const d = cfg.tiers[t] as { label: string; sub: string; badge?: string; images: string[] };
           const v = res[t];
           return (
-            <section key={t} style={{ border: "1px solid #e4e4e4", borderRadius: 12, overflow: "hidden" }}>
-              <img src={d.images[0]} alt={`${t}_livingroom_4`} loading="lazy" style={{ width: "100%" }} />
-              <div style={{ padding: 16 }}>
-                <h2>{d.label} {d.badge && <span style={{ background: "#e71c24", borderRadius: 4, color: "#fff", fontSize: 12, padding: "2px 6px" }}>{d.badge}</span>}</h2>
-                <p>{d.sub}</p>
-                <p style={{ fontSize: 28, fontWeight: 700 }}>{inr(v.total)}</p>
-                <button onClick={() => setOpen(open === t ? null : t)}>View details</button>
+            <section className="tier" key={t}>
+              <img src={d.images[0]} alt={`${t} living room`} loading="lazy" />
+              <div className="tier-body">
+                <h2>{d.label} {d.badge && <span className="badge">{d.badge}</span>}</h2>
+                <p className="sub">{d.sub}</p>
+                <p className="price">{inr(v.total)}</p>
+                <button className="btn-ghost" onClick={() => setOpen(open === t ? null : t)}>{open === t ? "Hide details" : "View details"}</button>
                 {open === t && (
                   <ul>
                     {extras.map((e, i) => <li key={i}>{e.label}: {inr(e.price)} × {e.qty} = {inr(e.price * e.qty)}</li>)}
@@ -55,10 +68,10 @@ function Page() {
           );
         })}
       </div>
-      <p><small><b>Note:</b> <i>This is an approximate estimate as per the selections made by you and is subject to change based on the dimensions of your space, design, non-standard product selection/customisation or additional scope of work.</i></small></p>
-      <section style={{ display: "flex", flexWrap: "wrap", gap: 16, marginTop: 24 }}>
-        {["Flat 10 year warranty", "45-days delivery*", "600+ design experts", "Post-installation service"].map((x) => <span key={x} style={{ border: "1px solid #eee", borderRadius: 8, padding: 12 }}>{x}</span>)}
-      </section>
+      <p className="note"><b>Note:</b> <i>This is an approximate estimate as per the selections made by you and is subject to change based on the dimensions of your space, design, non-standard product selection/customisation or additional scope of work.</i></p>
+      <div className="trust">
+        {["Flat 10 year warranty", "45-days delivery*", "600+ design experts", "Post-installation service"].map((x) => <span key={x}>{x}</span>)}
+      </div>
     </main>
   );
 }
